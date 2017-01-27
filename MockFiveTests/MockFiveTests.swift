@@ -3,8 +3,8 @@ import Nimble
 @testable import MockFive
 
 protocol MyMockableProtocol  {
-    func myComplexMethod(description: String?, price: Int, accessories: Any...) -> (Int, String)
-    func myOptionalMethod(arg: Int) -> String?
+    func myComplexMethod(_ description: String?, price: Int, accessories: Any...) -> (Int, String)
+    func myOptionalMethod(_ arg: Int) -> String?
     func mySimpleMethod()
 }
 
@@ -13,8 +13,8 @@ protocol MockFiveTests: MyMockableProtocol, Mock {}
 struct TestMock: MockFiveTests {
     let mockFiveLock = lock()
     func mySimpleMethod() { stub(identifier: "mySimpleMethod") }
-    func myOptionalMethod(arg: Int) -> String? { return stub(identifier: "myOptionalMethod", arguments: arg) }
-    func myComplexMethod(description: String?, price: Int, accessories: Any...) -> (Int, String) { return stub(identifier: "myComplexMethod", arguments: description, price, accessories) { _ in (7, "Fashion") } }
+    func myOptionalMethod(_ arg: Int) -> String? { return stub(identifier: "myOptionalMethod", arguments: arg) }
+    func myComplexMethod(_ description: String?, price: Int, accessories: Any...) -> (Int, String) { return stub(identifier: "myComplexMethod", arguments: description, price, accessories) { _ in (7, "Fashion") } }
 }
 
 class MockFiveSpecs: QuickSpec {
@@ -51,8 +51,8 @@ class MockFiveSpecs: QuickSpec {
                     struct TooFewTestMock: MockFiveTests {
                         let mockFiveLock = lock()
                         func mySimpleMethod() {}
-                        func myOptionalMethod(arg: Int) -> String? { return .None }
-                        func myComplexMethod(description: String?, price: Int, accessories: Any...) -> (Int, String) { return stub(identifier: "myComplexMethod", arguments: description) { _ in (7, "Fashion") } }
+                        func myOptionalMethod(_ arg: Int) -> String? { return .none }
+                        func myComplexMethod(_ description: String?, price: Int, accessories: Any...) -> (Int, String) { return stub(identifier: "myComplexMethod", arguments: description) { _ in (7, "Fashion") } }
                     }
                     
                     beforeEach {
@@ -70,8 +70,8 @@ class MockFiveSpecs: QuickSpec {
                     struct TooManyTestMock: MockFiveTests {
                         let mockFiveLock = lock()
                         func mySimpleMethod() {}
-                        func myOptionalMethod(arg: Int) -> String? { return .None }
-                        func myComplexMethod(description: String?, price: Int, accessories: Any...) -> (Int, String) { return stub(identifier: "myComplexMethod", arguments: description, price, accessories, "fruit", 9) { _ in (7, "Fashion") } }
+                        func myOptionalMethod(_ arg: Int) -> String? { return .none }
+                        func myComplexMethod(_ description: String?, price: Int, accessories: Any...) -> (Int, String) { return stub(identifier: "myComplexMethod", arguments: description, price, accessories, "fruit", 9) { _ in (7, "Fashion") } }
                     }
                     
                     beforeEach {
@@ -89,15 +89,15 @@ class MockFiveSpecs: QuickSpec {
         
         describe("stubbing method implementations") {
             let testMock = TestMock()
-            var fatalErrorString: String? = .None
-            let fatalErrorDispatch = { (behavior: () -> ()) in dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), behavior) }
+            var fatalErrorString: String? = .none
+            let fatalErrorDispatch = { (behavior: () -> ()) in DispatchQueue.global(qos: DispatchQoS.QoSClass.userInitiated).async(execute: behavior) }
             
             beforeEach { FatalErrorUtil.replaceFatalError({ (message, _, _) -> () in fatalErrorString = message }) }
             afterEach { FatalErrorUtil.restoreFatalError() }
             
             context("when the type does not conform to nilLiteralConvertible") {
                 context("when I have registered a closure of the correct type") {
-                    var arguments: [Any?]? = .None
+                    var arguments: [Any?]? = .none
                     
                     beforeEach {
                         testMock.registerStub("myComplexMethod") { args -> (Int, String) in
@@ -154,7 +154,7 @@ class MockFiveSpecs: QuickSpec {
                 }
                 
                 context("when I have registered a closure of the correct type") {
-                    var arguments: [Any?]? = .None
+                    var arguments: [Any?]? = .none
                     
                     beforeEach {
                         testMock.registerStub("myOptionalMethod") { args -> String? in
