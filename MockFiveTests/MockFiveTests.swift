@@ -11,6 +11,8 @@ protocol MyMockableProtocol  {
 protocol MockFiveTests: MyMockableProtocol, Mock {}
 
 struct TestMock: MockFiveTests {
+    func registerStub<T>(_ identifier: String, returns: ([Any?]) -> T) { }
+
     let mockFiveLock = lock()
     func mySimpleMethod() { stub(identifier: "mySimpleMethod") }
     func myOptionalMethod(_ arg: Int) -> String? { return stub(identifier: "myOptionalMethod", arguments: arg) }
@@ -38,7 +40,7 @@ class MockFiveSpecs: QuickSpec {
             context("When it's a complex call") {
                 context("with the correct number of arguments") {
                     beforeEach {
-                        mock.myComplexMethod(nil, price: 42, accessories: "shoes", "shirts", "timepieces")
+                        _ = mock.myComplexMethod(nil, price: 42, accessories: "shoes", "shirts", "timepieces")
                     }
                     
                     it("should have the correct output") {
@@ -49,6 +51,8 @@ class MockFiveSpecs: QuickSpec {
                 
                 context("with too few arguments") {
                     struct TooFewTestMock: MockFiveTests {
+                        func registerStub<T>(_ identifier: String, returns: ([Any?]) -> T) { }
+
                         let mockFiveLock = lock()
                         func mySimpleMethod() {}
                         func myOptionalMethod(_ arg: Int) -> String? { return .none }
@@ -57,7 +61,7 @@ class MockFiveSpecs: QuickSpec {
                     
                     beforeEach {
                         mock = TooFewTestMock()
-                        mock.myComplexMethod("A fun argument", price: 7, accessories: "Necklace")
+                        _ = mock.myComplexMethod("A fun argument", price: 7, accessories: "Necklace")
                     }
                     
                     it("should have the correct output") {
@@ -68,6 +72,8 @@ class MockFiveSpecs: QuickSpec {
                 
                 context("with too many arguments") {
                     struct TooManyTestMock: MockFiveTests {
+                        func registerStub<T>(_ identifier: String, returns: ([Any?]) -> T) { }
+
                         let mockFiveLock = lock()
                         func mySimpleMethod() {}
                         func myOptionalMethod(_ arg: Int) -> String? { return .none }
@@ -76,7 +82,7 @@ class MockFiveSpecs: QuickSpec {
                     
                     beforeEach {
                         mock = TooManyTestMock()
-                        mock.myComplexMethod("A fun argument", price: 7, accessories: "Necklace")
+                        _ = mock.myComplexMethod("A fun argument", price: 7, accessories: "Necklace")
                     }
                     
                     it("should have the correct output") {
@@ -90,9 +96,14 @@ class MockFiveSpecs: QuickSpec {
         describe("stubbing method implementations") {
             let testMock = TestMock()
             var fatalErrorString: String? = .none
-            let fatalErrorDispatch = { (behavior: () -> ()) in DispatchQueue.global(qos: DispatchQoS.QoSClass.userInitiated).async(execute: behavior) }
+            let fatalErrorDispatch = { (behavior: @escaping () -> ()) in DispatchQueue.global(qos: DispatchQoS.QoSClass.userInitiated).async(execute: behavior) }
             
-            beforeEach { FatalErrorUtil.replaceFatalError({ (message, _, _) -> () in fatalErrorString = message }) }
+            beforeEach {
+                FatalErrorUtil.replaceFatalError({ message, _, _ in
+                    fatalErrorString = message
+                    Swift.fatalError(message)
+                })
+            }
             afterEach { FatalErrorUtil.restoreFatalError() }
             
             context("when the type does not conform to nilLiteralConvertible") {
@@ -104,7 +115,7 @@ class MockFiveSpecs: QuickSpec {
                             arguments = args
                             return (21, "string")
                         }
-                        testMock.myComplexMethod("", price: 1)
+                        _ = testMock.myComplexMethod("", price: 1)
                     }
                     
                     it("should pass the arguments to the closure") {
@@ -137,7 +148,7 @@ class MockFiveSpecs: QuickSpec {
                 context("when I have registered a closure of the incorrect type") {
                     beforeEach {
                         testMock.registerStub("myComplexMethod") { _ in return 7 }
-                        fatalErrorDispatch({ testMock.myComplexMethod("", price: 1) })
+                        fatalErrorDispatch({ _ = testMock.myComplexMethod("", price: 1) })
                     }
                     
                     it("should throw a fatal error") {
@@ -161,7 +172,7 @@ class MockFiveSpecs: QuickSpec {
                             arguments = args
                             return "string"
                         }
-                        testMock.myOptionalMethod(7)
+                        _ = testMock.myOptionalMethod(7)
                     }
                     
                     it("should pass the arguments to the closure") {
@@ -203,7 +214,7 @@ class MockFiveSpecs: QuickSpec {
             
             beforeEach {
                 mock1.mySimpleMethod()
-                mock1.myComplexMethod("", price: 9)
+                _ = mock1.myComplexMethod("", price: 9)
             }
             
             it("should log the calls on the first mock") {
@@ -222,7 +233,7 @@ class MockFiveSpecs: QuickSpec {
                 
                 beforeEach {
                     mock1.mySimpleMethod()
-                    mock2.myComplexMethod("", price: 9)
+                    _ = mock2.myComplexMethod("", price: 9)
                     mock1.resetMock()
                 }
                 
@@ -241,7 +252,7 @@ class MockFiveSpecs: QuickSpec {
                 
                 beforeEach {
                     mock1.mySimpleMethod()
-                    mock2.myComplexMethod("", price: 9)
+                    _ = mock2.myComplexMethod("", price: 9)
                     resetMockFive()
                 }
                 

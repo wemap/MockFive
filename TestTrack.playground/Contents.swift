@@ -39,7 +39,7 @@ myClassMock.returnsOptional()
 protocol ExampleProtocol {
     func returnsVoid()
     func returnsOptional() -> String?
-    func complex(string string: String, factors: Int...) -> (Float, Int)
+    func complex(string: String, factors: Int...) -> (Float, Int)
 }
 
 // --- Mock file (in test target)
@@ -48,7 +48,7 @@ struct ExampleProtocolMock: ExampleProtocol, Mock {
     
     func returnsVoid()                                                      { stub(identifier: "returns void") }
     func returnsOptional() -> String?                                       { return stub(identifier: "returns optional") }
-    func complex(string string: String, factors: Int...) -> (Float, Int)    { return stub(identifier: "complex", arguments: string, factors) { (0.1, 7) } }
+    func complex(string: String, factors: Int...) -> (Float, Int)    { return stub(identifier: "complex", arguments: string, factors) { (0.1, 7) } }
 }
 
 

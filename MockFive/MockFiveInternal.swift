@@ -67,7 +67,7 @@ func + <T, U> (left: [T:U], right: [T:U]) -> [T:U] {
 }
 
 // Private
-private var globalObjectIDIndex: Int32 = 0
+public var globalObjectIDIndex: Int32 = 0
 private var mockRecords: [String:[String]] = [:]
 private var mockBlocks: [String:[String:Any]] = [:]
 
@@ -83,22 +83,22 @@ private func stringify(_ function: String, arguments: [Any?], returnType: String
     } else {
         let startIndex = function.range(of: "(")!.upperBound
         let endIndex = function.range(of: ")")!.lowerBound
-        invocation += function.substring(to: startIndex)
-        
-        let argumentLabels = function.substring(with: (startIndex ..< endIndex)).components(separatedBy: ":")
+        invocation += "\(function[..<startIndex])"
+
+        let argumentLabels = function[startIndex ..< endIndex].components(separatedBy: ":")
         for i in 0..<argumentLabels.count - 1 {
             invocation += argumentLabels[i] + ": "
             if (i < arguments.count) { invocation += "\(arguments[i])" }
             invocation += ", "
         }
-        invocation = invocation.substring(to: invocation.characters.index(invocation.endIndex, offsetBy: -2)) + ")"
+        invocation = "\(invocation[..<invocation.index(invocation.endIndex, offsetBy: -2)]))"
         if let returnType = returnType { invocation += " -> \(returnType)" }
         if argumentLabels.count - 1 != arguments.count {
             invocation += " [Expected \(argumentLabels.count - 1), got \(arguments.count)"
             if argumentLabels.count < arguments.count {
                 let remainder = arguments[argumentLabels.count - 1..<arguments.count]
                 let roughArguments = remainder.reduce(": ", { $0 + "\($1), " })
-                invocation += roughArguments.substring(to: roughArguments.characters.index(roughArguments.endIndex, offsetBy: -2))
+                invocation += "\(roughArguments[..<roughArguments.index(roughArguments.endIndex, offsetBy: -2)])"
             }
             invocation += "]"
         }
